@@ -398,24 +398,38 @@ var appConfig = {
 			this.modeFunction('sortRecentProjects', projects);
 		},
 
-		// HANDLE FILES
+		// create a new tab
 		newFile: function() {
-			var title = prompt('Choose a file name and type: \nSupported types: ' + this.fileTypes.toString()).replace(/ /g,'');
-			var dotSplit = title.split(".");
-			var re = /(?:\.([^.]+))?$/;
+			var self = this;
 
-			if (!title) return false;
+			// prompt 
+			var callback = function(vars) {
+				var title = vars.gnrlinput;
 
-			if (this.fileTypes.indexOf(re.exec(title)[1]) < 0 || (dotSplit.length > 2)){
-				window.alert("unsupported/improper file type selected.\nAutomaticallly adding a .js extension");
-				title = dotSplit[0] + '.js';
-			}
+				var dotSplit = title.split(".");
+				var re = /(?:\.([^.]+))?$/;
 
-			var filename = title;
+				if (!title) return false;
 
-			var f = new pFile(filename);
-			this.currentProject.addFile(f);
-			this.openFile(f.name);
+				// TO DO: replace alert with a new dialog, or a warning in the existing dialog
+				if (self.fileTypes.indexOf(re.exec(title)[1]) < 0 || (dotSplit.length > 2)){
+					window.alert("unsupported/improper file type selected.\nAutomaticallly adding a .js extension");
+					title = dotSplit[0] + '.js';
+				}
+
+				var filename = title;
+
+				var f = new pFile(filename);
+				self.currentProject.addFile(f);
+				self.openFile(f.name);
+			};
+
+			// prompt dialog for new name, then update name
+			self.$broadcast('prompt-general', {
+				msg: 'Choose a file name and type: \n</p><h5>Supported types: ' + this.fileTypes.toString().replace(/ /g,', ') + '</h5>',
+				input: 'my_file.js',
+				callback: callback
+			});
 
 		},
 
@@ -797,7 +811,21 @@ var appConfig = {
 		openShareDialog: function() {
 			this.$broadcast('open-share-dialog');
 		},
+		openAboutDialog: function() {
+			function ok() {
+				console.log('dialog closed');
+			}
 
+			var opts = {
+				msg : '<h1 class="wep5">we.p5<sup>*alpha</sup></h1>' +
+					'<h5>A Web Editor designed for the <a href="http://p5js.org" target="_blank">p5.js</a> community.</h5>'+
+					'<p>This is an open source project currently under heavy development.</p>'+
+					'<p>The source code is on <a href="https://github.com/therewasaguy/p5js-webIDE" target="_blank">Github</a>' +
+					'<p>If you find any issues, please join the existing discussion or start a new thread <a href="https://github.com/therewasaguy/p5js-webIDE/issues" target="_blank">here</a>',
+				callback: ok
+			}
+			this.$broadcast('open-about-dialog', opts);
+		},
 		/**
 		 *  Stringify the current project data and
 		 *  save it in local storage. This is useful
@@ -859,33 +887,6 @@ var appConfig = {
 				this.newWindowOpen = window.open(window.location.protocol + '//' + window.location.host + '/preview'); 
 				return;
 			}, 10);
-		},
-
-		// not currently used, was related to openInNewWindow
-		openSavedProjectInNewWindow: function() {
-			/*** open saved project: ***/
-
-			// this only works if a project is saved
-			var pathname = window.location.pathname.split('/');
-			var username = pathname[1];
-			var projectID = pathname[2];
-
-			if (!username || !projectID) {
-				alert('please save project before opening in a new window')
-				return false;
-			}
-
-			// TO DO: open without fetching code from server
-
-			// TO DO: refresh if a window is already open (is this possible?)
-
-			// this opens saved project
-			if (this.newWindowOpen) {
-				// the open tab will know to refresh
-				this.newWindowOpen.postMessage('newcode', window.localStorage.fileObjects);
-			} else {
-				this.newWindowOpen = window.open('http://' + window.location.host + '/view/' + username + '/' + projectID); 
-			}
 		},
 
 		openSketchbook: function() {

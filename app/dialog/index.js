@@ -1,4 +1,8 @@
-
+/**
+ *  Dialog / Modal window
+ *  
+ *  @type {[type]}
+ */
 var Vue = require('vue');
 
 module.exports = Vue.extend({
@@ -62,6 +66,7 @@ module.exports = Vue.extend({
 		});
 
 		this.$on('open-share-dialog', this.openShareDialog);
+		this.$on('open-about-dialog', this.generalPrompt);
 		this.$on('prompt-rename', this.promptRename);
 		this.$on('prompt-save-as', this.promptSaveAs);
 		this.$on('prompt-general', this.generalPrompt);
@@ -81,7 +86,7 @@ module.exports = Vue.extend({
 		this.viewGeneral = document.getElementById('general-view');
 
 		this._defaultCallback = function(val) {
-			console.log(val);
+			// console.log(val);
 		};
 
 		this.callback = this._defaultCallback;
@@ -90,11 +95,6 @@ module.exports = Vue.extend({
 	methods: {
 
 		open: function() {
-			// this.show();
-		},
-
-		// should be renamed "open"
-		show: function() {
 			// clear overwriteID
 			this.overwriteID = null
 
@@ -104,6 +104,8 @@ module.exports = Vue.extend({
 			this.container.classList.remove('hidden');
 			this.mainContainer.classList.add('blurred');
 			this.$broadcast('dialog-open');
+
+			this.addKeyListeners();
 		},
 
 		close: function() {
@@ -115,10 +117,12 @@ module.exports = Vue.extend({
 			this.container.classList.add('hidden');
 			this.mainContainer.classList.remove('blurred');
 			this.$broadcast('dialog-close');
+
+			this.removeKeyListeners();
 		},
 
 		openShareDialog: function() {
-			this.show();
+			this.open();
 			this.mode = 'share';
 
 			var currentProj = this.$root.currentProject;
@@ -146,7 +150,7 @@ module.exports = Vue.extend({
 		},
 
 		promptSaveAs: function(callback) {
-			this.show();
+			this.open();
 			this.callback = callback;
 			this.mode = 'save';
 
@@ -167,7 +171,7 @@ module.exports = Vue.extend({
 		},
 
 		promptRename: function(callback) {
-			this.show();
+			this.open();
 
 			this.mode = 'rename';
 			this.callback = callback;
@@ -183,7 +187,7 @@ module.exports = Vue.extend({
 
 		openSketchbook: function() {
 			this.mode = 'sketchbook';
-			this.show();
+			this.open();
 
 			this.viewGeneral.classList.add('hidden');
 			this.viewSave.classList.add('hidden');
@@ -201,9 +205,11 @@ module.exports = Vue.extend({
 			var msg = obj.msg;
 			var inputField = obj.input || null;
 			this.mode = 'general';
-			this.show();
+			this.open();
 
 			var gnrlInput = document.getElementById('gnrlinput');
+			gnrlInput.value = '';
+
 			if (inputField) {
 				gnrlInput.style.display = 'block';
 				gnrlInput.placeholder = inputField;
@@ -218,7 +224,6 @@ module.exports = Vue.extend({
 			this.viewSave.classList.add('hidden');
 			this.viewShare.classList.add('hidden');
 			this.viewSketchbook.classList.add('hidden');
-
 		},
 
 		/**
@@ -247,6 +252,41 @@ module.exports = Vue.extend({
 
 		cancel: function() {
 			this.close();
+		},
+
+		/**
+		 *  Accept or Close dialog on Enter or Escape
+		 *
+		 *  @method  addKeyListeners
+		 */
+		addKeyListeners: function() {
+			var self = this;
+
+			self.listener = function(e){
+				var key = e.which || e.keyCode;
+				switch(key) {
+					case 13: // enter
+						self.accept();
+						break;
+					case 27: // escape
+						self.close();
+						break;
+					default:
+						break;
+				}
+			};
+
+			document.addEventListener('keyup', self.listener);
+		},
+
+		/**
+		 *  Remove listeners for Enter and Escape keypress
+		 *
+		 *  @method  removeKeyListeners
+		 */
+		removeKeyListeners: function() {
+			document.removeEventListener('keyup', self.listener);
+			self.listener = undefined;
 		}
 	}
 
