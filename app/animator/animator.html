@@ -1,0 +1,23 @@
+<div id="side-container">
+	<div id="animator-container" class = "{{className}}">
+
+	<!-- v-on="contextmenu: popupMenu(this, $event)"> -->
+
+
+		<div id="animator">
+			<div id="filetree">
+				<div id="sidebarButton" class="{{sidebarIconClass}}" v-on:click="this.$root.toggleSidebar()">
+					<label style="display: inline-flex;">
+						<!-- <img  id="sidebarIcon" class="{{sidebarIconClass}}" style="cursor: pointer;"> -->
+	 
+					</label>
+				</div>
+				<ul>
+					<pfile v-for="f in fileObjects | orderBy 'name'" :data="f"></pfile>
+				</ul>
+			</div>
+		</div>
+
+
+	</div>
+</div>
